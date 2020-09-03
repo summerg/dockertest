@@ -1,26 +1,32 @@
-version: '3'
+version: '3.1'
 services:
   web:
     image: osiolabs/drupaldevwithdocker-php:7.2
     volumes:
-      - ./docroot:/var/www/drupal
-      - ./vendor:/var/www/vendors
+      - ./docroot:/var/www/html/drupal
+      - ./vendor:/var/www/html/vendors
+      - ./db-backups:/var/mysql/backups
     env_file:
       - ./docker.env
     ports:
       - "80:80"
       - "443:443"
+
   db:
-    image: osiolabs/drupaldevwithdocker-mysql:10.0
-    volumes:
-      - ./db-backups:/var/mysql/backups:delegated
+    image: mysql:5.7.30
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
     env_file:
       - ./docker.env
-    ports:
-      - "3306:3306"
+    volumes:
+      - ./mysql/init/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d/init.sql
+      - ./db-backups:/var/mysql/backups
+
   pma:
     image: phpmyadmin/phpmyadmin
     env_file:
       - ./docker.env
     ports:
      - "8001:80"
+    volumes:
+     - ./phpmyadmin.ini:/usr/local/etc/php/php.ini
